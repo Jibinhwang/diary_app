@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마음을 나누는 일기장</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>오늘의 마음을 담은 일기장</h1>
+        
+        <!-- 캘린더 섹션 -->
+        <div class="calendar-section">
+            <div id="calendar"></div>
+        </div>
+
+        <div class="diary-section">
+            <form id="diaryForm">
+                <textarea id="diary" placeholder="오늘 하루는 어떠셨나요?&#10;당신의 이야기를 들려주세요..."></textarea>
+                <button type="submit">오늘 하루도 수고했엉</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 모달 -->
+    <div id="letterModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div class="letter">
+                <div class="letter-content" id="responseContent"></div>
+                <div class="letter-date" id="currentDate"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // emotions_data를 서버에서 전달받은 데이터로 초기화
+        const emotions_data = {{ emotions|tojson|safe }};
+        
+        const modal = document.getElementById('letterModal');
+        const closeButton = document.querySelector('.close-button');
+
+        // 감정에 따른 색상 매핑
+        const emotionColors = {
+            'HAPPY': '#FFD700',  // 행복 - 노란색
+            'SAD': '#87CEEB',    // 슬픔 - 하늘색
+            'CALM': '#98FB98',   // 평온 - 연두색
+            'JOY': '#FFA500',    // 기쁨 - 주황색
+            'ANGRY': '#FF6B6B'   // 화남 - 빨간색
+        };
+
+        // 감정 이모지 정의
+        const emotionEmojis = {
+            'HAPPY': '😊',
+            'JOY': '😃',
+            'CALM': '😌',
+            'NEUTRAL': '😐',
+            'DEPRESSED': '😔',
+            'SAD': '😢',
+            'ANGRY': '😠'
+        };
+
+        // 날짜 형식을 통일하는 함수 추가
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // 캘린더 초기화
+        const calendar = flatpickr("#calendar", {
+            inline: true,
+            locale: 'ko',
+            defaultDate: 'today',
+            onChange: async function(selectedDates, dateStr) {
+                try {
+                    const formattedDate = formatDate(selectedDates[0]);
+                    const response = await fetch(`/get_diary?date=${formattedDate}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        document.getElementById('responseContent').innerText = data.content;
+                        document.getElementById('currentDate').innerText = formattedDate;
+                        document.getElementById('letterModal').style.display = "block";
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            },
+            onDayCreate: function(dObj, dStr, fp, dayElem) {
+                const formattedDate = formatDate(dayElem.dateObj);
+                if (emotions_data[formattedDate]) {
+                    const emotion = emotions_data[formattedDate].emotion;
+                    dayElem.style.backgroundColor = emotionColors[emotion];
+                    // 이모지 추가
+                    const emoji = document.createElement('span');
+                    emoji.innerHTML = emotionEmojis[emotion];
+                    emoji.style.position = 'absolute';
+                    emoji.style.top = '2px';
+                    emoji.style.right = '2px';
+                    emoji.style.fontSize = '10px';
+                    dayElem.appendChild(emoji);
+                }
+            }
+        });
+
+        // 캘린더 날짜 셀에 감정 표시 추가
+        function updateCalendarEmotions() {
+            const dateCells = document.querySelectorAll('.fc-daygrid-day');
+            dateCells.forEach(cell => {
+                const date = cell.getAttribute('data-date');
+                if (emotions_data[date]) {
+                    const emotion = emotions_data[date].emotion;
+                    const dot = document.createElement('div');
+                    dot.style.width = '8px';
+                    dot.style.height = '8px';
+                    dot.style.borderRadius = '50%';
+                    dot.style.backgroundColor = emotionColors[emotion];
+                    dot.style.margin = '2px auto';
+                    
+                    // 날짜 숫자 아래에 점 추가
+                    const numberCell = cell.querySelector('.fc-daygrid-day-top');
+                    numberCell.after(dot);
+                }
+            });
+        }
+
+        // 캘린더가 렌더링된 후 감정 표시 업데이트
+        document.addEventListener('DOMContentLoaded', function() {
+            // ... 기존 캘린더 초기화 코드 ...
+            updateCalendarEmotions();
+        });
+
+        // 기존 폼 제출 이벤트에 감정 분석 요청 추가
+        document.getElementById('diaryForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const diary = document.getElementById('diary').value;
+            
+            try {
+                const emotionResponse = await fetch('/analyze_emotion', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ diary: diary })
+                });
+                
+                const emotionData = await emotionResponse.json();
+                
+                // 캘린더 업데이트
+                calendar.redraw();
+                
+                const responseContent = document.getElementById('responseContent');
+                const dateDiv = document.getElementById('currentDate');
+                
+                // 날짜 형식 통일
+                const today = new Date();
+                const formattedDate = formatDate(today);
+                
+                responseContent.innerText = "친애하는 당신에게...\n\n오늘 하루도 수고 많으셨습니다.";
+                dateDiv.innerText = formattedDate;
+                modal.style.display = "block";
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('처리 중 오류가 발생했습니다.');
+            }
+        });
+
+        // 모달 닫기 버튼
+        closeButton.addEventListener('click', () => {
+            modal.style.display = "none";
+        });
+
+        // 모달 외부 클릭시 닫기
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = "none";
+            }
+        });
+    </script>
+</body>
+</html>

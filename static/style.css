@@ -1,0 +1,230 @@
+body {
+    font-family: 'Nanum Myeongjo', serif;
+    background: linear-gradient(135deg, #f5e6d3 0%, #faf7f2 100%);
+    margin: 0;
+    padding: 20px 10px;
+    line-height: 1.4;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(139, 115, 85, 0.1);
+}
+
+h1 {
+    text-align: center;
+    color: #5d4037;
+    margin-bottom: 20px;
+    font-size: 1.8em;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.diary-section {
+    background-color: transparent;
+    padding: 10px 0;
+    margin-bottom: 20px;
+}
+
+textarea {
+    width: 100%;
+    height: 200px;
+    padding: 15px;
+    border: 2px solid #e6d5c5;
+    border-radius: 10px;
+    font-family: 'Nanum Myeongjo', serif;
+    font-size: 14px;
+    resize: none;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+    background-color: rgba(253, 251, 247, 0.7);
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: #8b7355;
+    box-shadow: 0 0 15px rgba(139, 115, 85, 0.1);
+}
+
+button {
+    display: block;
+    width: 180px;
+    margin: 0 auto;
+    padding: 10px 0;
+    background: linear-gradient(135deg, #8b7355 0%, #6d5a43 100%);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(139, 115, 85, 0.2);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.response-section {
+    display: none;
+    margin-top: 50px;
+    padding: 35px;
+    background: linear-gradient(135deg, rgba(253, 251, 247, 0.9) 0%, rgba(255, 255, 255, 0.9) 100%);
+    border-radius: 15px;
+    border: 2px solid #e6d5c5;
+    box-shadow: 0 5px 20px rgba(139, 115, 85, 0.05);
+}
+
+.response-content {
+    font-family: 'Nanum Myeongjo', serif;
+    color: #5d4037;
+    line-height: 2;
+    white-space: pre-line;
+    font-size: 17px;
+    padding: 10px;
+}
+
+.date {
+    text-align: right;
+    color: #8b7355;
+    font-style: italic;
+    margin-top: 25px;
+    font-size: 15px;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 30px 20px;
+    }
+    
+    textarea {
+        height: 250px;
+        padding: 20px;
+    }
+    
+    button {
+        width: 180px;
+    }
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+.modal-content {
+    position: relative;
+    background: #fff;
+    width: 90%;
+    max-width: 350px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin: 40vh auto 0;
+    transform: translateY(-20%);
+}
+
+.letter {
+    padding: 20px;
+    background: url('편지지_배경_이미지_URL') center/cover;
+    border-radius: 20px;
+}
+
+.letter-content {
+    font-family: 'Nanum Myeongjo', serif;
+    color: #5d4037;
+    line-height: 2;
+    white-space: pre-line;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.letter-date {
+    text-align: right;
+    color: #8b7355;
+    font-style: italic;
+    font-size: 12px;
+}
+
+.close-button {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    font-size: 28px;
+    color: #8b7355;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-button:hover {
+    color: #5d4037;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        margin: 20px auto;
+    }
+    
+    .letter {
+        padding: 30px 20px;
+    }
+}
+
+.calendar-section {
+    margin-bottom: 20px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(139, 115, 85, 0.1);
+}
+
+.flatpickr-calendar {
+    background: transparent;
+    box-shadow: none;
+    width: 100%;
+    max-width: 300px !important;
+    margin: 0 auto;
+    font-size: 14px !important;
+}
+
+.flatpickr-day {
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    height: 30px !important;
+    line-height: 30px !important;
+    font-size: 13px !important;
+}
+
+.flatpickr-day.selected {
+    background: #8b7355;
+    border-color: #8b7355;
+}
