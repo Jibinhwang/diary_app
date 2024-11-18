@@ -162,9 +162,13 @@
                 const today = new Date();
                 const formattedDate = formatDate(today);
                 
-                responseContent.innerText = "친애하는 당신에게...\n\n오늘 하루도 수고 많으셨습니다.";
+                // AI가 생성한 답장 표시
+                responseContent.innerText = emotionData.content;
                 dateDiv.innerText = formattedDate;
                 modal.style.display = "block";
+                
+                // 입력 필드 초기화
+                document.getElementById('diary').value = '';
                 
             } catch (error) {
                 console.error('Error:', error);
