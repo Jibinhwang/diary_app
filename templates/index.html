@@ -12,6 +12,10 @@
 </head>
 <body>
     <div class="container">
+        <div class="user-info">
+            <span>{{ session['name'] }}님의 일기장</span>
+            <a href="{{ url_for('logout') }}" class="logout-btn">로그아웃</a>
+        </div>
         <h1>오늘의 마음을 담은 일기장</h1>
         
         <!-- 캘린더 섹션 -->
@@ -32,11 +36,54 @@
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <div class="letter">
+                <div class="emotions-chart">
+                    <div class="emotion-bars"></div>
+                </div>
                 <div class="letter-content" id="responseContent"></div>
                 <div class="letter-date" id="currentDate"></div>
             </div>
         </div>
     </div>
+
+    <style>
+    .emotions-chart {
+        margin-bottom: 20px;
+        padding: 10px;
+        background: #f5f5f5;
+        border-radius: 8px;
+    }
+
+    .emotion-bar {
+        display: flex;
+        align-items: center;
+        margin: 5px 0;
+    }
+
+    .emotion-label {
+        width: 80px;
+        font-size: 14px;
+    }
+
+    .emotion-progress {
+        flex-grow: 1;
+        height: 20px;
+        background: #eee;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .emotion-fill {
+        height: 100%;
+        transition: width 0.3s ease;
+    }
+
+    .emotion-value {
+        margin-left: 10px;
+        width: 50px;
+        text-align: right;
+        font-size: 14px;
+    }
+    </style>
 
     <script>
         // emotions_data를 서버에서 전달받은 데이터로 초기화
@@ -56,13 +103,11 @@
 
         // 감정 이모지 정의
         const emotionEmojis = {
-            'HAPPY': '😊',
-            'JOY': '😃',
-            'CALM': '😌',
-            'NEUTRAL': '😐',
-            'DEPRESSED': '😔',
-            'SAD': '😢',
-            'ANGRY': '😠'
+            'HAPPY': '😊',       // 행복
+            'SAD': '😢',         // 슬픔
+            'CALM': '😌',        // 평온
+            'JOY': '😃',         // 기쁨
+            'ANGRY': '😠'        // 화남
         };
 
         // 날짜 형식을 통일하는 함수 추가
@@ -86,6 +131,7 @@
                         const data = await response.json();
                         document.getElementById('responseContent').innerText = data.content;
                         document.getElementById('currentDate').innerText = formattedDate;
+                        createEmotionChart(data.emotions);
                         document.getElementById('letterModal').style.display = "block";
                     }
                 } catch (error) {
@@ -95,11 +141,10 @@
             onDayCreate: function(dObj, dStr, fp, dayElem) {
                 const formattedDate = formatDate(dayElem.dateObj);
                 if (emotions_data[formattedDate]) {
-                    const emotion = emotions_data[formattedDate].emotion;
-                    dayElem.style.backgroundColor = emotionColors[emotion];
-                    // 이모지 추가
+                    const mainEmotion = emotions_data[formattedDate].mainEmotion;
+                    dayElem.style.backgroundColor = emotionColors[mainEmotion];
                     const emoji = document.createElement('span');
-                    emoji.innerHTML = emotionEmojis[emotion];
+                    emoji.innerHTML = emotionEmojis[mainEmotion];
                     emoji.style.position = 'absolute';
                     emoji.style.top = '2px';
                     emoji.style.right = '2px';
@@ -109,32 +154,38 @@
             }
         });
 
-        // 캘린더 날짜 셀에 감정 표시 추가
-        function updateCalendarEmotions() {
-            const dateCells = document.querySelectorAll('.fc-daygrid-day');
-            dateCells.forEach(cell => {
-                const date = cell.getAttribute('data-date');
-                if (emotions_data[date]) {
-                    const emotion = emotions_data[date].emotion;
-                    const dot = document.createElement('div');
-                    dot.style.width = '8px';
-                    dot.style.height = '8px';
-                    dot.style.borderRadius = '50%';
-                    dot.style.backgroundColor = emotionColors[emotion];
-                    dot.style.margin = '2px auto';
-                    
-                    // 날짜 숫자 아래에 점 추가
-                    const numberCell = cell.querySelector('.fc-daygrid-day-top');
-                    numberCell.after(dot);
-                }
+        // 감정 차트 생성 함수
+        function createEmotionChart(emotions) {
+            const emotionBarsDiv = document.querySelector('.emotion-bars');
+            emotionBarsDiv.innerHTML = '';
+
+            Object.entries(emotions).forEach(([emotion, value]) => {
+                const barDiv = document.createElement('div');
+                barDiv.className = 'emotion-bar';
+                
+                const label = document.createElement('div');
+                label.className = 'emotion-label';
+                label.textContent = emotion;
+                
+                const progress = document.createElement('div');
+                progress.className = 'emotion-progress';
+                
+                const fill = document.createElement('div');
+                fill.className = 'emotion-fill';
+                fill.style.width = `${value * 100}%`;
+                fill.style.backgroundColor = emotionColors[emotion];
+                
+                const valueDiv = document.createElement('div');
+                valueDiv.className = 'emotion-value';
+                valueDiv.textContent = `${(value * 100).toFixed(0)}%`;
+                
+                progress.appendChild(fill);
+                barDiv.appendChild(label);
+                barDiv.appendChild(progress);
+                barDiv.appendChild(valueDiv);
+                emotionBarsDiv.appendChild(barDiv);
             });
         }
-
-        // 캘린더가 렌더링된 후 감정 표시 업데이트
-        document.addEventListener('DOMContentLoaded', function() {
-            // ... 기존 캘린더 초기화 코드 ...
-            updateCalendarEmotions();
-        });
 
         // 기존 폼 제출 이벤트에 감정 분석 요청 추가
         document.getElementById('diaryForm').addEventListener('submit', async (e) => {

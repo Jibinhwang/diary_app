@@ -243,3 +243,22 @@ button:active {
     background: #8b7355;
     border-color: #8b7355;
 }
+
+.user-info {
+    text-align: right;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+}
+
+.logout-btn {
+    margin-left: 10px;
+    padding: 5px 10px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #333;
+}
+
+.logout-btn:hover {
+    background-color: #e0e0e0;
+}
